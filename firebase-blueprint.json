@@ -1,0 +1,159 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the Nexo Emprende platform.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["client", "advisor", "admin"] },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "ClientProfile": {
+      "title": "ClientProfile",
+      "description": "Business profile for a client.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "industry": { "type": "string" },
+        "stage": { "type": "string" },
+        "formalization": { "type": "string" },
+        "score": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "critical", "stable", "in_review"] },
+        "advisorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "businessName", "createdAt", "updatedAt"]
+    },
+    "Diagnosis": {
+      "title": "Diagnosis",
+      "description": "Initial or updated diagnosis for a client.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "answers": { "type": "object" },
+        "score": { "type": "number" },
+        "areas": { "type": "object" },
+        "status": { "type": "string", "enum": ["pending", "completed", "validated"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "status", "createdAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task in the intervention plan.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "in_review", "completed"] },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "responsible": { "type": "string", "enum": ["client", "advisor"] },
+        "area": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "title", "status", "createdAt"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "A document uploaded by the client or advisor.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["uploaded", "pending_review", "reviewed", "observed", "approved"] },
+        "url": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" },
+        "comments": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["clientId", "name", "status", "url", "uploadedAt"]
+    },
+    "FinancialRecord": {
+      "title": "FinancialRecord",
+      "description": "A financial transaction (income/expense).",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "type", "amount", "date", "createdAt"]
+    },
+    "Alert": {
+      "title": "Alert",
+      "description": "System alert for a client or advisor.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "type": { "type": "string" },
+        "message": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "message", "priority", "isRead", "createdAt"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Log of actions taken on a client's case.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "actorId": { "type": "string" },
+        "actorRole": { "type": "string" },
+        "action": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "actorId", "action", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user accounts and their roles."
+    },
+    "/clientProfiles/{profileId}": {
+      "schema": { "$ref": "#/entities/ClientProfile" },
+      "description": "Stores business profiles for clients."
+    },
+    "/diagnoses/{diagnosisId}": {
+      "schema": { "$ref": "#/entities/Diagnosis" },
+      "description": "Stores client diagnoses."
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Stores tasks for clients."
+    },
+    "/documents/{documentId}": {
+      "schema": { "$ref": "#/entities/Document" },
+      "description": "Stores document metadata."
+    },
+    "/financialRecords/{recordId}": {
+      "schema": { "$ref": "#/entities/FinancialRecord" },
+      "description": "Stores financial transactions."
+    },
+    "/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/Alert" },
+      "description": "Stores system alerts."
+    },
+    "/activityLogs/{logId}": {
+      "schema": { "$ref": "#/entities/ActivityLog" },
+      "description": "Stores activity logs."
+    }
+  }
+}

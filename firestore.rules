@@ -1,0 +1,125 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        getUserData().role == 'admin' || 
+        (request.auth.token.email == "plugoso1432@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+    
+    function isAdvisor() {
+      return isAuthenticated() && getUserData().role == 'advisor';
+    }
+
+    function isClient() {
+      return isAuthenticated() && getUserData().role == 'client';
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['client', 'advisor', 'admin'] &&
+             data.createdAt is string;
+    }
+
+    function isValidClientProfile(data) {
+      return data.keys().hasAll(['userId', 'businessName', 'createdAt', 'updatedAt']) &&
+             data.userId is string &&
+             data.businessName is string &&
+             data.createdAt is string &&
+             data.updatedAt is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (
+        (isOwner(userId) && request.resource.data.role == 'client') || isAdmin()
+      );
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (
+        (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /clientProfiles/{profileId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && isValidClientProfile(request.resource.data) && (
+        isOwner(request.resource.data.userId) || isAdmin()
+      );
+      allow update: if isAuthenticated() && isValidClientProfile(request.resource.data) && (
+        isOwner(resource.data.userId) || isAdmin() || isAdvisor()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /diagnoses/{diagnosisId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.clientId) || isAdmin() || isAdvisor());
+      allow update: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow delete: if isAdmin();
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.clientId) || isAdmin() || isAdvisor());
+      allow update: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow delete: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+    }
+
+    match /documents/{documentId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.clientId) || isAdmin() || isAdvisor());
+      allow update: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow delete: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+    }
+
+    match /financialRecords/{recordId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.clientId) || isAdmin() || isAdvisor());
+      allow update: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow delete: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+    }
+
+    match /alerts/{alertId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.clientId) || isAdmin() || isAdvisor());
+      allow update: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow delete: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+    }
+
+    match /activityLogs/{logId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.clientId) || isAdmin() || isAdvisor());
+      allow create: if isAuthenticated() && (isOwner(request.resource.data.clientId) || isAdmin() || isAdvisor());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
